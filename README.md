@@ -15,7 +15,7 @@ to use [demisto-sdk](https://github.com/demisto/demisto-sdk) to interact with or
 ### Installation
 
 #### PyPI
-This module is not yet published to PyPI (or any other packaging index as far as I know).
+- `pip install xsoar-dependency-graph`
 
 #### Directly from GitLab
 Bleeding edge versions can be installed using pip:
