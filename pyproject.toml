@@ -1,5 +1,5 @@
 [project]
-name = "xsoar_dependency_graph"
+name = "xsoar-dependency-graph"
 dynamic = ["version"]
 description = "Creates and plots a dependency graph for XSOAR content packs."
 readme = "README.md"
@@ -22,8 +22,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/tlium/xsoar_dependency_graph"
-Issues = "https://github.com/tlium/xsoar_dependency_graph/issues"
+Homepage = "https://github.com/tlium/xsoar-dependency-graph"
+Issues = "https://github.com/tlium/xsoar-dependency-graph/issues"
 
 [build-system]
 requires = ["hatchling"]
