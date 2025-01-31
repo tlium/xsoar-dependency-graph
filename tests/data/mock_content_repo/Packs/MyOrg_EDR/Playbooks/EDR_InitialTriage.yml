@@ -1,0 +1,219 @@
+id: EDR_InitialTriage
+version: -1
+name: EDR_InitialTriage
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: f42bc03f-0172-4d31-8518-cec41460d32a
+    type: start
+    task:
+      id: f42bc03f-0172-4d31-8518-cec41460d32a
+      version: -1
+      name: ""
+      iscommand: false
+      brand: ""
+      description: ""
+    nexttasks:
+      "#none#":
+        - "1"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {
+        "position": {
+          "x": 50,
+          "y": 50
+        }
+      }
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+    isoversize: false
+    isautoswitchedtoquietmode: false
+  "1":
+    id: "1"
+    taskid: fe77cdbb-b0bb-4efb-801a-49557471cc48
+    type: regular
+    task:
+      id: fe77cdbb-b0bb-4efb-801a-49557471cc48
+      version: -1
+      name: Print something
+      description: Prints text to war room (Markdown supported)
+      scriptName: EDR_Triage
+      type: regular
+      iscommand: false
+      brand: ""
+    nexttasks:
+      "#none#":
+        - "2"
+    scriptarguments:
+      value:
+        simple: This is a value
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {
+        "position": {
+          "x": 50,
+          "y": 195
+        }
+      }
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+    isoversize: false
+    isautoswitchedtoquietmode: false
+  "2":
+    id: "2"
+    taskid: a32efc27-0c0c-42c4-8ea7-16e7f10d23af
+    type: regular
+    task:
+      id: a32efc27-0c0c-42c4-8ea7-16e7f10d23af
+      version: -1
+      name: Run EDR Triage script
+      description: Prints text to war room (Markdown supported)
+      scriptName: EDR_FetchFile
+      type: regular
+      iscommand: false
+      brand: ""
+    nexttasks:
+      "#none#":
+        - "5"
+    scriptarguments:
+      value:
+        simple: value
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {
+        "position": {
+          "x": 50,
+          "y": 370
+        }
+      }
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+    isoversize: false
+    isautoswitchedtoquietmode: false
+  "5":
+    id: "2"
+    taskid: a32efc27-0c0c-42c4-8ea7-16e7f10d23af
+    type: regular
+    task:
+      id: a32efc27-0c0c-42c4-8ea7-16e7f10d23af
+      version: -1
+      name: Run EDR Triage script
+      description: Prints text to war room (Markdown supported)
+      scriptName: GenericScript
+      type: regular
+      iscommand: false
+      brand: ""
+    nexttasks:
+      "#none#":
+        - "4"
+    scriptarguments:
+      value:
+        simple: value
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {
+        "position": {
+          "x": 50,
+          "y": 370
+        }
+      }
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+    isoversize: false
+    isautoswitchedtoquietmode: false
+  "3":
+    id: "3"
+    taskid: efeec364-c515-4fb2-8d10-20b6a9322919
+    type: title
+    task:
+      id: efeec364-c515-4fb2-8d10-20b6a9322919
+      version: -1
+      name: Done
+      type: title
+      iscommand: false
+      brand: ""
+      description: ""
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {
+        "position": {
+          "x": 50,
+          "y": 720
+        }
+      }
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+    isoversize: false
+    isautoswitchedtoquietmode: false
+  "4":
+    id: "4"
+    taskid: 73bce844-f1de-4af9-86e3-96256b6ff247
+    type: playbook
+    task:
+      id: 73bce844-f1de-4af9-86e3-96256b6ff247
+      version: -1
+      name: GenericPlaybook
+      playbookName: GenericPlaybook
+      type: playbook
+      iscommand: false
+      brand: ""
+      description: ""
+    nexttasks:
+      "#none#":
+        - "3"
+    separatecontext: true
+    continueonerrortype: ""
+    view: |-
+      {
+        "position": {
+          "x": 50,
+          "y": 545
+        }
+      }
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+    isoversize: false
+    isautoswitchedtoquietmode: false
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 735,
+        "width": 380,
+        "x": 50,
+        "y": 50
+      }
+    }
+  }
+inputs: []
+outputs: []
+quiet: true
+tests:
+  - No tests (auto formatted)
+fromversion: 6.10.0
+description: This is a placeholder description.

@@ -1,0 +1,82 @@
+id: GenericPlaybook
+version: 3
+vcShouldKeepItemLegacyProdMachine: false
+name: GenericPlaybook
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: 69d62896-4f2d-4a15-8875-611f28473eaa
+    type: start
+    task:
+      id: 69d62896-4f2d-4a15-8875-611f28473eaa
+      version: -1
+      name: ""
+      iscommand: false
+      brand: ""
+    nexttasks:
+      "#none#":
+        - "1"
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {
+        "position": {
+          "x": 670,
+          "y": -10
+        }
+      }
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+    isoversize: false
+    isautoswitchedtoquietmode: false
+  "1":
+    id: "1"
+    taskid: 8b058243-b69a-4604-865c-3c2ed1361a4e
+    type: regular
+    task:
+      id: 8b058243-b69a-4604-865c-3c2ed1361a4e
+      version: -1
+      name: Print something
+      description: Prints text to war room (Markdown supported)
+      scriptName: GenericScript
+      type: regular
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      value:
+        simple: something
+    separatecontext: false
+    continueonerrortype: ""
+    view: |-
+      {
+        "position": {
+          "x": 670,
+          "y": 170
+        }
+      }
+    note: false
+    timertriggers: []
+    ignoreworker: false
+    skipunavailable: false
+    quietmode: 0
+    isoversize: false
+    isautoswitchedtoquietmode: false
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 275,
+        "width": 380,
+        "x": 670,
+        "y": -10
+      }
+    }
+  }
+inputs: []
+outputs: []
+quiet: true
