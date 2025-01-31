@@ -222,6 +222,7 @@ class ContentGraph:
         self.G.remove_nodes_from(to_remove)
 
     def _export_gml(self, output_path: Path) -> None:
+        """Internal class method to export graph to GML file."""
         try:
             nx.write_gml(self.G, output_path)
         except Exception as e:
@@ -229,6 +230,7 @@ class ContentGraph:
             raise RuntimeError(msg) from e
 
     def _export_graphml(self, output_path: Path) -> None:
+        """Internal class method to export graph as GraphML file."""
         try:
             nx.write_graphml(self.G, output_path)
         except Exception as e:
