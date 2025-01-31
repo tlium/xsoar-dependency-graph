@@ -1,6 +1,6 @@
 [project]
 name = "xsoar_dependency_graph"
-version = "0.0.1"
+dynamic = ["version"]
 description = "Creates and plots a dependency graph for XSOAR content packs."
 readme = "README.md"
 authors = [{ name = "Torbjørn Lium", email = "torben@lium.org" }]
@@ -28,6 +28,9 @@ Issues = "https://github.com/tlium/xsoar_dependency_graph/issues"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/__about__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/utils"]
