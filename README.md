@@ -1,7 +1,8 @@
 ![PyPI](https://img.shields.io/pypi/v/xsoar-dependency-graph?label=PyPI)
+![PyPI](https://img.shields.io/pypi/v/xsoar-dependency-graph?label=PyPI)
 
 # XSOAR Dependency Graph
-[![Python package](https://github.com/tlium/xsoar-dependency-graph/actions/workflows/python-package.yml/badge.svg)](https://github.com/tlium/xsoar-dependency-graph/actions/workflows/python-package.yml)
+[![Python package](https://github.com/tlium/xsoar-dependency-graph/actions/workflows/release.yml/badge.svg)](https://github.com/tlium/xsoar-dependency-graph/actions/workflows/release.yml)
 
 
 XSOAR Dependency Graph is a Python utility to create a dependency graph of either an entire content repository
