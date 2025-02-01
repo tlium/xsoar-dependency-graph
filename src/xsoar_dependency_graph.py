@@ -221,6 +221,38 @@ class ContentGraph:
         to_remove = [node for node in self.G.nodes() if self.G.degree(node) < n]  # pyright: ignore  # noqa: PGH003
         self.G.remove_nodes_from(to_remove)
 
+    def _export_gml(self, output_path: Path) -> None:
+        """Internal class method to export graph to GML file."""
+        try:
+            nx.write_gml(self.G, output_path)
+        except Exception as e:
+            msg = f"Failed to write graph to {output_path}"
+            raise RuntimeError(msg) from e
+
+    def _export_graphml(self, output_path: Path) -> None:
+        """Internal class method to export graph as GraphML file."""
+        try:
+            nx.write_graphml(self.G, output_path)
+        except Exception as e:
+            msg = f"Failed to write graph to {output_path}"
+            raise RuntimeError(msg) from e
+
+    def export(self, output_path: Path, fmt: str = "GraphML") -> None:
+        """Exports the full graph (including isolated nodes) to `output_path`. Filenames ending in .gz or .bz2 will be compressed.
+        Valid `fmt` options are one of ["GraphML, "JSON"]. Also see networkx.org for documentation on reading and writing graphs."""
+        output_formats = ["GraphML", "GML"]
+        if fmt not in output_formats:
+            msg = f"Output format {fmt} not one of {','.join(output_formats)}"
+            raise ValueError(msg)
+
+        if fmt == "GraphML":
+            self._export_graphml(output_path)
+        elif fmt == "JSON":
+            self._export_gml(output_path)
+        else:
+            msg = f"Invalid output format. Expected one of {','.join(output_formats)}"
+            raise ValueError(msg)
+
     def plot_connected_components(self) -> None:  # noqa: PLR0915
         """Plots the Graph as a non-directional graph."""
         G = self.G  # noqa: N806
