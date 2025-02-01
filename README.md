@@ -1,4 +1,4 @@
-![PyPI](https://img.shields.io/pypi/v/PACKAGE?label=pypi%20xsoar-dependency-graph)
+![PyPI](https://img.shields.io/pypi/v/xsoar-dependency-graph
 
 # XSOAR Dependency Graph
 [![Python package](https://github.com/tlium/xsoar-dependency-graph/actions/workflows/python-package.yml/badge.svg)](https://github.com/tlium/xsoar-dependency-graph/actions/workflows/python-package.yml)
