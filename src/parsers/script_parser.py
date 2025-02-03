@@ -10,7 +10,7 @@ class ScriptParser(BasicParser):
         super().__init__()
         self.data = super().load_yaml(script_path)
         self.script_path = script_path
-        print(f"  - parsing {script_path}")
+        # print(f"  - parsing {script_path}")
 
     def get_script_id(self) -> str:
         return self.data["commonfields"]["id"]

@@ -8,13 +8,14 @@ from xsoar_dependency_graph import ContentGraph
 #   repo_path = Path("/your/package/repo/path")  # noqa: ERA001
 repo_path = Path(__file__).parent.resolve().parent.resolve()
 repo_path = Path(repo_path / "tests/data/mock_content_repo")
+upstream_path = Path("/Users/torben/Source/DNB/XSOAR/upstream-content")
 
 # Instantiate a ContentGraph object using debug mode.
-cg = ContentGraph(repo_path=repo_path)
+cg = ContentGraph(repo_path=repo_path, upstream_repo_path=upstream_path)
 
 # Create the content graph
-exclude_list = ["Lium_dev"]
-cg.create_content_graph(pack_name="", exclude_list=exclude_list)
+# cg.create_content_graph()
+cg.add_nodes_from_upstream()
 
 # Plot the content graph
-cg.plot_graph()
+cg.plot_connected_components()

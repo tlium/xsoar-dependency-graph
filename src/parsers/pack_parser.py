@@ -5,7 +5,7 @@ from parsers.basic_parser import BasicParser
 
 class PackParser(BasicParser):
     def __init__(self, packpath: Path) -> None:
-        print(f"Parsing pack {packpath}")
+        # print(f"Parsing pack {packpath}")
         super().__init__()
         self.packpath = packpath
         metadata_path = Path(packpath / "pack_metadata.json")
