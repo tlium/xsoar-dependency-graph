@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from parsers.basic_parser import BasicParser
+from .basic_parser import BasicParser
 
 
 class IntegrationParser(BasicParser):

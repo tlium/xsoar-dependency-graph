@@ -1,8 +1,9 @@
 import ast
 from pathlib import Path
 
-from parsers.basic_parser import BasicParser
-from utils.ast_utils import FunctionCallFinder
+from xsoar_dependency_graph.utils.ast_utils import FunctionCallFinder
+
+from .basic_parser import BasicParser
 
 
 class ScriptParser(BasicParser):
@@ -10,7 +11,7 @@ class ScriptParser(BasicParser):
         super().__init__()
         self.data = super().load_yaml(script_path)
         self.script_path = script_path
-        print(f"  - parsing {script_path}")
+        # print(f"  - parsing {script_path}")
 
     def get_script_id(self) -> str:
         return self.data["commonfields"]["id"]
