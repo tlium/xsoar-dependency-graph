@@ -34,3 +34,6 @@ Issues = "https://github.com/tlium/xsoar-dependency-graph/issues"
 
 [tool.hatch.version]
 path = "src/__about__.py"
+
+[tool.pytest.ini_options]
+norecursedirs = ["data"]
