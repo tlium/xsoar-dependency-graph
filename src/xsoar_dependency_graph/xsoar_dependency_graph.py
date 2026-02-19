@@ -20,11 +20,12 @@ if TYPE_CHECKING:
 
 
 class ContentGraph:
-    def __init__(self, *, upstream_repo_path: Path | None = None, repo_path: Path) -> None:
+    def __init__(self, *, upstream_repo_path: Path | None = None, repo_path: Path, installed_content: dict | None = None) -> None:
         self.custom_graph = nx.Graph()
         self.upstream_graph = nx.Graph()
         self.repo_path = repo_path
         self.pack_paths = list(repo_path.glob("Packs/*"))
+        self.command_map = self.generate_command_map(installed_content)
 
         if upstream_repo_path:
             self.upstream_paths = [
@@ -69,6 +70,60 @@ class ContentGraph:
             graph_object.add_edges_from(playbook_edges)
             nx.set_node_attributes(graph_object, attributes)
 
+    def generate_command_map(self, installed_content):
+        if not installed_content:
+            return None
+        # get_all_installed()
+        command_map = {}
+        for pack in installed_content:
+            command_map[pack["id"]] = {}
+            if pack["contentItems"]["automation"]:
+                command_map[pack["id"]]["automations"] = [automation["name"] for automation in pack["contentItems"]["automation"]]
+            else:
+                command_map[pack["id"]]["automations"] = []
+
+            if not pack["contentItems"]["integration"]:
+                continue
+
+            integrations = [integration for integration in pack["contentItems"]["integration"]]
+            command_map[pack["id"]]["integrations"] = {}
+            for integration in integrations:
+                integration_commands = [command["name"] for command in integration["commands"]]
+                command_map[pack["id"]]["integrations"][integration["id"]] = integration_commands
+
+        return command_map
+
+    def add_dependency_nodes(self, script_id, graph_object: Graph):
+        if not self.command_map:
+            return
+        for pack in self.command_map:  # ty: ignore
+            if script_id in self.command_map[pack]["automations"]:
+                print(f"Found automation {script_id=} in in {pack}")
+                graph_object.add_node(pack, node_type="Content Pack")
+                graph_object.add_edge(script_id, pack)
+            if "integrations" not in self.command_map[pack]:
+                continue
+            if not self.command_map[pack]["integrations"]:
+                continue
+            for integration in self.command_map[pack]["integrations"]:
+                if script_id in self.command_map[pack]["integrations"][integration]:
+                    graph_object.add_node(pack, node_type="Content Pack")
+                    graph_object.add_edge(script_id, pack)
+                    attributes = {
+                        script_id: {
+                            "node_type": "Integration Command",
+                            "pack_name": pack,
+                        }
+                    }
+                    nx.set_node_attributes(graph_object, attributes)
+                    """
+                    print(f"Found integration command {script_id} in in {pack}")
+                    graph_object.add_node(script_id, node_type="Integration Command")
+                    edges = [(script_id, pack)]
+                    print(edges)
+                    graph_object.add_edges_from(edges)
+                    """
+
     def _create_nodes_from_scripts(self, pack_name: str, scripts: list[Path], graph_object: Graph) -> None:
         """Adds a graph node for the script itself. Also parses the script with AST and finds
         any reference to execute_command or demisto.executeCommand and creates script nodes for
@@ -78,6 +133,7 @@ class ContentGraph:
             if parser.is_bad_filepath(script_path):
                 continue
             script_id = parser.get_script_id()
+            # self.testfunc(script_id)
             graph_object.add_node(script_id, node_type="Script")
             try:
                 nx.shortest_path(graph_object, source=pack_name, target=script_id)
@@ -96,9 +152,12 @@ class ContentGraph:
                 attributes[edge[1]] = {
                     "node_type": "Script",
                 }
+                # self.search_for_command(edge[1])
             if edges:
                 graph_object.add_edges_from(edges)
                 nx.set_node_attributes(graph_object, attributes)
+            for edge in edges:
+                self.add_dependency_nodes(edge[1], graph_object=graph_object)
 
     def _create_nodes_from_layouts(self, pack_name: str, layouts: list[Path], graph_object: Graph) -> None:
         """Creates a node for the layout. Also parses the layout file and creates script
