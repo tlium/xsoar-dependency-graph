@@ -8,10 +8,10 @@ class FunctionCallFinder(ast.NodeVisitor):
         self.script_names = []
 
     def _get_executed_command(self, node: ast.Call) -> str:
-        executed = ""
+        executed: str = ""
         if node.args:
             if isinstance(node.args[0], ast.Constant):
-                executed = node.args[0].value
+                executed = node.args[0].value  # ty: ignore[invalid-assignment]
             elif isinstance(node.args[0], ast.JoinedStr):
                 # We probably have something like an f-string argument to the function here
                 # Ignore for now. Parsing to be implemented
@@ -24,7 +24,7 @@ class FunctionCallFinder(ast.NodeVisitor):
         elif node.keywords:
             kw = {kw.arg: kw.value for kw in node.keywords}
             if isinstance(kw["command"], ast.Constant):
-                executed = kw["command"].value
+                executed = str(kw["command"].value)
             elif isinstance(kw["command"], ast.Name):
                 # Not yet implemented
                 executed = ""
@@ -33,13 +33,13 @@ class FunctionCallFinder(ast.NodeVisitor):
                 executed = ""
         if executed == "executeCommandAt":
             if node.args:
-                executed = node.args[0].value
+                executed = node.args[0].value  # ty: ignore[unresolved-attribute]
                 if isinstance(executed, ast.Name):
                     # Not yet implemented
                     executed = ""
             elif node.keywords:
                 d = {kw.arg: kw.value for kw in node.keywords}
-                d2 = {k.value: v for k, v in zip(d["args"].keys, d["args"].values, strict=False)}
+                d2 = {k.value: v for k, v in zip(d["args"].keys, d["args"].values, strict=False)}  # ty: ignore[unresolved-attribute]
                 executed = d2["command"].value
         if isinstance(executed, ast.Name):
             print(ast.dump(node))
