@@ -61,6 +61,8 @@ class ContentGraph:
                 }
             graph_object.add_edges_from(script_edges)
             nx.set_node_attributes(graph_object, attributes)
+            for edge in script_edges:
+                self.add_dependency_nodes(edge[1], graph_object=graph_object)
 
             attributes = {}
             for edge in playbook_edges:
@@ -96,11 +98,11 @@ class ContentGraph:
     def add_dependency_nodes(self, script_id, graph_object: Graph):
         if not self.command_map:
             return
-        for pack in self.command_map:  # ty: ignore
+        for pack in self.command_map:
             if script_id in self.command_map[pack]["automations"]:
-                print(f"Found automation {script_id=} in in {pack}")
                 graph_object.add_node(pack, node_type="Content Pack")
                 graph_object.add_edge(script_id, pack)
+
             if "integrations" not in self.command_map[pack]:
                 continue
             if not self.command_map[pack]["integrations"]:
@@ -116,13 +118,6 @@ class ContentGraph:
                         }
                     }
                     nx.set_node_attributes(graph_object, attributes)
-                    """
-                    print(f"Found integration command {script_id} in in {pack}")
-                    graph_object.add_node(script_id, node_type="Integration Command")
-                    edges = [(script_id, pack)]
-                    print(edges)
-                    graph_object.add_edges_from(edges)
-                    """
 
     def _create_nodes_from_scripts(self, pack_name: str, scripts: list[Path], graph_object: Graph) -> None:
         """Adds a graph node for the script itself. Also parses the script with AST and finds
@@ -133,7 +128,6 @@ class ContentGraph:
             if parser.is_bad_filepath(script_path):
                 continue
             script_id = parser.get_script_id()
-            # self.testfunc(script_id)
             graph_object.add_node(script_id, node_type="Script")
             try:
                 nx.shortest_path(graph_object, source=pack_name, target=script_id)
@@ -362,21 +356,92 @@ class ContentGraph:
         integration_nodes = [node[0] for node in nodes_list if node[1] == "Integration"]
         integration_commands = [node[0] for node in nodes_list if node[1] == "Integration Command"]
 
-        nodes = nx.draw_networkx_nodes(gcc, pos, ax=ax0, node_size=20)
-        nx.draw_networkx_nodes(gcc, pos, ax=ax0, nodelist=pack_nodes, node_color="tab:pink", label="Content Packs", node_size=20)
-        nx.draw_networkx_nodes(gcc, pos, ax=ax0, nodelist=script_nodes, node_color="tab:green", label="Scripts", node_size=20)
-        nx.draw_networkx_nodes(gcc, pos, ax=ax0, nodelist=playbook_nodes, node_color="tab:blue", label="Playbooks", node_size=20)
-        nx.draw_networkx_nodes(gcc, pos, ax=ax0, nodelist=layout_nodes, node_color="tab:orange", label="Layouts", node_size=20)
-        nx.draw_networkx_nodes(gcc, pos, ax=ax0, nodelist=casetype_nodes, node_color="tab:olive", label="Case Types", node_size=20)
-        nx.draw_networkx_nodes(gcc, pos, ax=ax0, nodelist=integration_nodes, node_color="tab:red", label="Integrations", node_size=20)
+        palette = {
+            "Script": "#009E73",  # bluish green
+            "Playbook": "#0072B2",  # blue
+            "Content Pack": "#CC79A7",  # reddish purple
+            "Layout": "#E69F00",  # orange
+            "CaseType": "#D55E00",  # vermillion
+            "Integration": "#56B4E9",  # sky blue (distinct from Playbook blue by lightness)
+            "Integration Command": "#F0E442",  # yellow (use black outline, which you already do)
+        }
+        nodes = nx.draw_networkx_nodes(gcc, pos, ax=ax0, node_size=30)
+        nx.draw_networkx_nodes(
+            gcc,
+            pos,
+            ax=ax0,
+            nodelist=pack_nodes,
+            node_color=palette["Content Pack"],
+            edgecolors="black",
+            linewidths=0.8,
+            label="Content Packs",
+            node_size=30,
+        )
+        nx.draw_networkx_nodes(
+            gcc,
+            pos,
+            ax=ax0,
+            nodelist=script_nodes,
+            node_color=palette["Script"],
+            edgecolors="black",
+            linewidths=0.8,
+            label="Scripts",
+            node_size=30,
+        )
+        nx.draw_networkx_nodes(
+            gcc,
+            pos,
+            ax=ax0,
+            nodelist=playbook_nodes,
+            node_color=palette["Playbook"],
+            edgecolors="black",
+            linewidths=0.8,
+            label="Playbooks",
+            node_size=30,
+        )
+        nx.draw_networkx_nodes(
+            gcc,
+            pos,
+            ax=ax0,
+            nodelist=layout_nodes,
+            node_color=palette["Layout"],
+            edgecolors="black",
+            linewidths=0.8,
+            label="Layouts",
+            node_size=30,
+        )
+        nx.draw_networkx_nodes(
+            gcc,
+            pos,
+            ax=ax0,
+            nodelist=casetype_nodes,
+            node_color=palette["CaseType"],
+            edgecolors="black",
+            linewidths=0.8,
+            label="Case Types",
+            node_size=30,
+        )
+        nx.draw_networkx_nodes(
+            gcc,
+            pos,
+            ax=ax0,
+            nodelist=integration_nodes,
+            node_color=palette["Integration"],
+            edgecolors="black",
+            linewidths=0.8,
+            label="Integrations",
+            node_size=30,
+        )
         nx.draw_networkx_nodes(
             gcc,
             pos,
             ax=ax0,
             nodelist=integration_commands,
-            node_color="yellow",
+            node_color=palette["Integration Command"],
+            edgecolors="black",
+            linewidths=0.8,
             label="Integration Commands",
-            node_size=20,
+            node_size=30,
         )
         nx.draw_networkx_edges(gcc, pos, ax=ax0, alpha=0.4)
 
@@ -397,16 +462,37 @@ class ContentGraph:
         )
         annotation.set_visible(False)
 
-        def _update_annotation(ind) -> None:  # noqa: ANN001
-            """Updates the annotation text. This function is called from mouseover hover events."""
-            index = int(ind["ind"][0])
-            node = nodes_list[index]
-            xy = pos[node]
-            annotation.xy = xy
+        # Pinned (persistent) annotations keyed by node id.
+        # Clicking a node toggles its pinned annotation on/off.
+        pinned_annotations = {}
+
+        def _node_text(node: str) -> str:
             node_attr = {"node_name": node}
             node_attr.update(G.nodes[node])
-            text = "\n".join(f"{k}: {v}" for k, v in node_attr.items())
-            annotation.set_text(text)
+            return "\n".join(f"{k}: {v}" for k, v in node_attr.items())
+
+        def _make_annotation(*, xy, text: str):  # noqa: ANN001
+            ann = ax0.annotate(
+                text,
+                xy=xy,
+                xytext=(20, 20),
+                textcoords="offset points",
+                bbox={"boxstyle": "round", "fc": "w"},
+                arrowprops={"arrowstyle": "->"},
+            )
+            ann.set_visible(True)
+            return ann
+
+        def _node_from_ind(ind) -> str:  # noqa: ANN001
+            index = int(ind["ind"][0])
+            return str(nodes_list[index])
+
+        def _update_annotation(ind) -> None:  # noqa: ANN001
+            """Updates the annotation text. This function is called from mouseover hover events."""
+            node = _node_from_ind(ind)
+            xy = pos[node]
+            annotation.xy = xy
+            annotation.set_text(_node_text(node))
 
         def _hover(event) -> None:  # noqa: ANN001
             """Mouseover hover event. Updates and shows the annotation of a node the mouse pointer
@@ -415,6 +501,15 @@ class ContentGraph:
             if event.inaxes == ax0:
                 cont, ind = nodes.contains(event)
                 if cont:
+                    node = _node_from_ind(ind)
+                    # Optional: suppress hover annotation if the node is pinned,
+                    # to avoid duplicate text overlays.
+                    if node in pinned_annotations:
+                        if vis:
+                            annotation.set_visible(False)
+                            fig.canvas.draw_idle()
+                        return
+
                     _update_annotation(ind)
                     annotation.set_visible(True)
                     fig.canvas.draw_idle()
@@ -423,15 +518,58 @@ class ContentGraph:
                     fig.canvas.draw_idle()
 
         def _onclick(event) -> None:  # noqa: ANN001
-            """Button click event. Prings out node neighbors to the console when a node is clicked."""
-            if event.inaxes == ax0:
-                cont, ind = nodes.contains(event)
-                if cont:
-                    print(f"Clicked node {ind}")
-                    index = int(ind["ind"][0])
-                    node = nodes_list[index]
-                    node_neighbors = nx.neighbors(gcc, node)
-                    print(f"Node neighbors: {list(node_neighbors)}")
+            """
+            Button click event.
+            - Click a node to pin its annotation (persist on screen)
+            - Click the same node again to unpin (remove) the annotation
+            - Hover remains normal for other nodes
+            """
+            if event.inaxes != ax0:
+                return
+
+            # Right-click (usually button==3): clear all pinned annotations
+            if event.button == 3:
+                if pinned_annotations:
+                    for ann in pinned_annotations.values():
+                        ann.remove()
+                    pinned_annotations.clear()
+
+                    # Optional: also hide the hover annotation
+                    annotation.set_visible(False)
+
+                    fig.canvas.draw_idle()
+                return
+
+            # Only handle left-click for pin/unpin (usually button==1)
+            if event.button != 1:
+                return
+
+            cont, ind = nodes.contains(event)
+            if not cont:
+                return
+
+            node = _node_from_ind(ind)
+
+            # Toggle pinned annotation off if already pinned
+            if node in pinned_annotations:
+                pinned_annotations[node].remove()
+                del pinned_annotations[node]
+                fig.canvas.draw_idle()
+                return
+
+            # Pin a new persistent annotation for this node
+            xy = pos[node]
+            pinned_annotations[node] = _make_annotation(xy=xy, text=_node_text(node))
+
+            # Optionally hide hover annotation right after pinning
+            annotation.set_visible(False)
+
+            # Temporarily disable printing neighbors to console
+            # node_neighbors = nx.neighbors(gcc, node)
+            # print(f"Clicked node: {node}")
+            # print(f"Node neighbors: {list(node_neighbors)}")
+
+            fig.canvas.draw_idle()
 
         fig.canvas.mpl_connect("motion_notify_event", _hover)
         fig.canvas.mpl_connect("button_press_event", _onclick)
