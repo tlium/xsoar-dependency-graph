@@ -1,15 +1,11 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+import networkx as nx
 import numpy as np
-
-if TYPE_CHECKING:
-    import networkx as nx
-    from matplotlib.axes import Axes
-    from matplotlib.figure import Figure
-    from matplotlib.text import Annotation
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
+from matplotlib.text import Annotation
 
 
 @dataclass
