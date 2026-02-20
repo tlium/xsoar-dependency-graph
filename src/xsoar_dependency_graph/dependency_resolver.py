@@ -23,17 +23,17 @@ class DependencyResolver:
         if not installed_content:
             return None
 
-        command_map = {}
+        content_map = {}
         for pack in installed_content:
             pack_id = pack["id"]
-            command_map[pack_id] = {
+            content_map[pack_id] = {
                 "automations": [],
                 "integrations": {},
                 "playbooks": [],
             }
 
             try:
-                command_map[pack_id]["automations"] = [automation["name"] for automation in pack["contentItems"]["automation"]]
+                content_map[pack_id]["automations"] = [automation["name"] for automation in pack["contentItems"]["automation"]]
             except TypeError:
                 pass
 
@@ -41,16 +41,16 @@ class DependencyResolver:
                 integrations = pack["contentItems"]["integration"]
                 for integration in integrations:
                     integration_commands = [command["name"] for command in integration["commands"]]
-                    command_map[pack_id]["integrations"][integration["id"]] = integration_commands
+                    content_map[pack_id]["integrations"][integration["id"]] = integration_commands
             except TypeError:
                 pass
 
             try:
-                command_map[pack_id]["playbooks"] = [playbook["name"] for playbook in pack["contentItems"]["playbook"]]
+                content_map[pack_id]["playbooks"] = [playbook["name"] for playbook in pack["contentItems"]["playbook"]]
             except TypeError:
                 pass
 
-        return command_map
+        return content_map
 
     def add_dependency_nodes(self, name: str, graph: Graph) -> None:
         """Searches for a content item across all packs and adds edges to the graph."""
