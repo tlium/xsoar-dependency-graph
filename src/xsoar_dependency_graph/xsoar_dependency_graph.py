@@ -115,6 +115,9 @@ class ContentGraph:
                 }
             graph_object.add_edges_from(playbook_edges)
             nx.set_node_attributes(graph_object, attributes)
+            for edge in playbook_edges:
+                # self._add_dependency_script_nodes(edge[1], graph_object=graph_object)
+                self._add_dependency_nodes(edge[1], graph_object=graph_object)
 
     def generate_command_map(self, installed_content):
         """
