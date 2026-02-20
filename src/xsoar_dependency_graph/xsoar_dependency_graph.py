@@ -14,12 +14,53 @@ from .parsers.layout_parser import LayoutParser
 from .parsers.pack_parser import PackParser
 from .parsers.playbook_parser import PlaybookParser
 from .parsers.script_parser import ScriptParser
+from .utils.plot_interaction import PlotInteractionHandler
 
 if TYPE_CHECKING:
     from networkx.classes import Graph
 
+# Color palette for node types in graph visualization.
+# Uses colorblind-friendly colors from the Okabe-Ito palette.
+NODE_PALETTE = {
+    "Script": "#009E73",
+    "Playbook": "#0072B2",
+    "Content Pack": "#CC79A7",
+    "Layout": "#E69F00",
+    "CaseType": "#D55E00",
+    "Integration": "#56B4E9",
+    "Integration Command": "#F0E442",
+}
+
+# Display labels for node types in graph legend.
+NODE_TYPE_LABELS = {
+    "Script": "Scripts",
+    "Playbook": "Playbooks",
+    "Content Pack": "Content Packs",
+    "Layout": "Layouts",
+    "CaseType": "Case Types",
+    "Integration": "Integrations",
+    "Integration Command": "Integration Commands",
+}
+
 
 class ContentGraph:
+    @staticmethod
+    def _categorize_nodes_by_type(graph: Graph) -> dict[str, list[str]]:
+        """Group graph nodes by their node_type attribute.
+
+        Args:
+            graph: NetworkX graph with nodes that have a 'node_type' attribute.
+
+        Returns:
+            Dictionary mapping node_type values to lists of node identifiers.
+        """
+        categorized: dict[str, list[str]] = {}
+        for node, node_type in graph.nodes(data="node_type"):
+            if node_type not in categorized:
+                categorized[node_type] = []
+            categorized[node_type].append(node)
+        return categorized
+
     def __init__(self, *, upstream_repo_path: Path | None = None, repo_path: Path, installed_content: dict | None = None) -> None:
         self.custom_graph = nx.Graph()
         self.upstream_graph = nx.Graph()
@@ -329,7 +370,7 @@ class ContentGraph:
             msg = f"Invalid output format. Expected one of {','.join(output_formats)}"
             raise ValueError(msg)
 
-    def plot_connected_components(self) -> None:  # noqa: PLR0915
+    def plot_connected_components(self) -> None:
         """Plots the Graph as a non-directional graph."""
 
         G = self.custom_graph
@@ -345,104 +386,24 @@ class ContentGraph:
         gcc = G.subgraph(sorted(nx.connected_components(G), key=len, reverse=True)[0])
         pos = nx.spring_layout(gcc, seed=10396953)
 
-        # We want to draw the various nodes with different colors depending on type. It may be a better way to deal
-        # with this, but the following block kind of works...
-        nodes_list = gcc.nodes(data="node_type")
-        playbook_nodes = [node[0] for node in nodes_list if node[1] == "Playbook"]
-        script_nodes = [node[0] for node in nodes_list if node[1] == "Script"]
-        pack_nodes = [node[0] for node in nodes_list if node[1] == "Content Pack"]
-        layout_nodes = [node[0] for node in nodes_list if node[1] == "Layout"]
-        casetype_nodes = [node[0] for node in nodes_list if node[1] == "CaseType"]
-        integration_nodes = [node[0] for node in nodes_list if node[1] == "Integration"]
-        integration_commands = [node[0] for node in nodes_list if node[1] == "Integration Command"]
-
-        palette = {
-            "Script": "#009E73",  # bluish green
-            "Playbook": "#0072B2",  # blue
-            "Content Pack": "#CC79A7",  # reddish purple
-            "Layout": "#E69F00",  # orange
-            "CaseType": "#D55E00",  # vermillion
-            "Integration": "#56B4E9",  # sky blue (distinct from Playbook blue by lightness)
-            "Integration Command": "#F0E442",  # yellow (use black outline, which you already do)
-        }
+        # Draw all nodes first (provides base layer), then draw colored nodes by type
         nodes = nx.draw_networkx_nodes(gcc, pos, ax=ax0, node_size=30)
-        nx.draw_networkx_nodes(
-            gcc,
-            pos,
-            ax=ax0,
-            nodelist=pack_nodes,
-            node_color=palette["Content Pack"],
-            edgecolors="black",
-            linewidths=0.8,
-            label="Content Packs",
-            node_size=30,
-        )
-        nx.draw_networkx_nodes(
-            gcc,
-            pos,
-            ax=ax0,
-            nodelist=script_nodes,
-            node_color=palette["Script"],
-            edgecolors="black",
-            linewidths=0.8,
-            label="Scripts",
-            node_size=30,
-        )
-        nx.draw_networkx_nodes(
-            gcc,
-            pos,
-            ax=ax0,
-            nodelist=playbook_nodes,
-            node_color=palette["Playbook"],
-            edgecolors="black",
-            linewidths=0.8,
-            label="Playbooks",
-            node_size=30,
-        )
-        nx.draw_networkx_nodes(
-            gcc,
-            pos,
-            ax=ax0,
-            nodelist=layout_nodes,
-            node_color=palette["Layout"],
-            edgecolors="black",
-            linewidths=0.8,
-            label="Layouts",
-            node_size=30,
-        )
-        nx.draw_networkx_nodes(
-            gcc,
-            pos,
-            ax=ax0,
-            nodelist=casetype_nodes,
-            node_color=palette["CaseType"],
-            edgecolors="black",
-            linewidths=0.8,
-            label="Case Types",
-            node_size=30,
-        )
-        nx.draw_networkx_nodes(
-            gcc,
-            pos,
-            ax=ax0,
-            nodelist=integration_nodes,
-            node_color=palette["Integration"],
-            edgecolors="black",
-            linewidths=0.8,
-            label="Integrations",
-            node_size=30,
-        )
-        nx.draw_networkx_nodes(
-            gcc,
-            pos,
-            ax=ax0,
-            nodelist=integration_commands,
-            node_color=palette["Integration Command"],
-            edgecolors="black",
-            linewidths=0.8,
-            label="Integration Commands",
-            node_size=30,
-        )
+
+        categorized_nodes = self._categorize_nodes_by_type(gcc)
+        for node_type, node_list in categorized_nodes.items():
+            if node_type not in NODE_PALETTE:
+                continue
+            nx.draw_networkx_nodes(
+                gcc,
+                pos,
+                ax=ax0,
+                nodelist=node_list,
+                node_color=NODE_PALETTE[node_type],
+                edgecolors="black",
+                linewidths=0.8,
+                label=NODE_TYPE_LABELS.get(node_type, node_type),
+                node_size=30,
+            )
         nx.draw_networkx_edges(gcc, pos, ax=ax0, alpha=0.4)
 
         plt.legend(scatterpoints=1)
@@ -451,7 +412,7 @@ class ContentGraph:
 
         nodes_list = np.array(list(gcc.nodes()))
 
-        # Define coordinates and styles of annotations
+        # Define coordinates and styles of hover annotation
         annotation = ax0.annotate(
             "",
             xy=(0, 0),
@@ -462,116 +423,16 @@ class ContentGraph:
         )
         annotation.set_visible(False)
 
-        # Pinned (persistent) annotations keyed by node id.
-        # Clicking a node toggles its pinned annotation on/off.
-        pinned_annotations = {}
-
-        def _node_text(node: str) -> str:
-            node_attr = {"node_name": node}
-            node_attr.update(G.nodes[node])
-            return "\n".join(f"{k}: {v}" for k, v in node_attr.items())
-
-        def _make_annotation(*, xy, text: str):  # noqa: ANN001
-            ann = ax0.annotate(
-                text,
-                xy=xy,
-                xytext=(20, 20),
-                textcoords="offset points",
-                bbox={"boxstyle": "round", "fc": "w"},
-                arrowprops={"arrowstyle": "->"},
-            )
-            ann.set_visible(True)
-            return ann
-
-        def _node_from_ind(ind) -> str:  # noqa: ANN001
-            index = int(ind["ind"][0])
-            return str(nodes_list[index])
-
-        def _update_annotation(ind) -> None:  # noqa: ANN001
-            """Updates the annotation text. This function is called from mouseover hover events."""
-            node = _node_from_ind(ind)
-            xy = pos[node]
-            annotation.xy = xy
-            annotation.set_text(_node_text(node))
-
-        def _hover(event) -> None:  # noqa: ANN001
-            """Mouseover hover event. Updates and shows the annotation of a node the mouse pointer
-            is hovering over."""
-            vis = annotation.get_visible()
-            if event.inaxes == ax0:
-                cont, ind = nodes.contains(event)
-                if cont:
-                    node = _node_from_ind(ind)
-                    # Optional: suppress hover annotation if the node is pinned,
-                    # to avoid duplicate text overlays.
-                    if node in pinned_annotations:
-                        if vis:
-                            annotation.set_visible(False)
-                            fig.canvas.draw_idle()
-                        return
-
-                    _update_annotation(ind)
-                    annotation.set_visible(True)
-                    fig.canvas.draw_idle()
-                elif vis:
-                    annotation.set_visible(False)
-                    fig.canvas.draw_idle()
-
-        def _onclick(event) -> None:  # noqa: ANN001
-            """
-            Button click event.
-            - Click a node to pin its annotation (persist on screen)
-            - Click the same node again to unpin (remove) the annotation
-            - Hover remains normal for other nodes
-            """
-            if event.inaxes != ax0:
-                return
-
-            # Right-click (usually button==3): clear all pinned annotations
-            if event.button == 3:
-                if pinned_annotations:
-                    for ann in pinned_annotations.values():
-                        ann.remove()
-                    pinned_annotations.clear()
-
-                    # Optional: also hide the hover annotation
-                    annotation.set_visible(False)
-
-                    fig.canvas.draw_idle()
-                return
-
-            # Only handle left-click for pin/unpin (usually button==1)
-            if event.button != 1:
-                return
-
-            cont, ind = nodes.contains(event)
-            if not cont:
-                return
-
-            node = _node_from_ind(ind)
-
-            # Toggle pinned annotation off if already pinned
-            if node in pinned_annotations:
-                pinned_annotations[node].remove()
-                del pinned_annotations[node]
-                fig.canvas.draw_idle()
-                return
-
-            # Pin a new persistent annotation for this node
-            xy = pos[node]
-            pinned_annotations[node] = _make_annotation(xy=xy, text=_node_text(node))
-
-            # Optionally hide hover annotation right after pinning
-            annotation.set_visible(False)
-
-            # Temporarily disable printing neighbors to console
-            # node_neighbors = nx.neighbors(gcc, node)
-            # print(f"Clicked node: {node}")
-            # print(f"Node neighbors: {list(node_neighbors)}")
-
-            fig.canvas.draw_idle()
-
-        fig.canvas.mpl_connect("motion_notify_event", _hover)
-        fig.canvas.mpl_connect("button_press_event", _onclick)
+        # Set up interaction handler and connect events
+        handler = PlotInteractionHandler(
+            graph=G,
+            fig=fig,
+            ax=ax0,
+            pos=pos,
+            nodes=nodes,
+            nodes_list=nodes_list,
+            annotation=annotation,
+        )
+        handler.connect()
 
         plt.show()
