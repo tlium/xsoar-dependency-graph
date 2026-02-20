@@ -105,7 +105,8 @@ class ContentGraph:
             graph_object.add_edges_from(script_edges)
             nx.set_node_attributes(graph_object, attributes)
             for edge in script_edges:
-                self.add_dependency_script_nodes(edge[1], graph_object=graph_object)
+                # self._add_dependency_script_nodes(edge[1], graph_object=graph_object)
+                self._add_dependency_nodes(edge[1], graph_object=graph_object)
 
             attributes = {}
             for edge in playbook_edges:
@@ -153,11 +154,18 @@ class ContentGraph:
 
         return command_map
 
+    def _add_dependency_nodes(self, name, graph_object):
+        # print(f"Looking for {name}")
+        self._add_dependency_script_nodes(name, graph_object)
+        self._add_dependency_playbook_nodes(name, graph_object)
+        self._add_dependency_integration_nodes(name, graph_object)
+
     def _add_dependency_script_nodes(self, script_id, graph_object: Graph):
         if not self.command_map:
             return
         for pack in self.command_map:
             if script_id in self.command_map[pack]["automations"]:
+                # print(f"Found script {script_id} in {pack}")
                 graph_object.add_node(pack, node_type="Content Pack")
                 graph_object.add_edge(script_id, pack)
 
@@ -166,15 +174,17 @@ class ContentGraph:
             return
         for pack in self.command_map:
             if playbook_id in self.command_map[pack]["playbooks"]:
+                # print(f"Found playbook {playbook_id} in {pack}")
                 graph_object.add_node(pack, node_type="Content Pack")
                 graph_object.add_edge(playbook_id, pack)
 
-    def _add_dependency_playbook_nodes(self, script_id, graph_object: Graph):
+    def _add_dependency_integration_nodes(self, script_id, graph_object: Graph):
         if not self.command_map:
             return
         for pack in self.command_map:
             for integration in self.command_map[pack]["integrations"]:
                 if script_id in self.command_map[pack]["integrations"][integration]:
+                    # print(f"Found integration command {script_id} in {integration} integration in {pack}")
                     graph_object.add_node(pack, node_type="Content Pack")
                     graph_object.add_edge(script_id, pack)
                     attributes = {
@@ -217,7 +227,7 @@ class ContentGraph:
                 graph_object.add_edges_from(edges)
                 nx.set_node_attributes(graph_object, attributes)
             for edge in edges:
-                self._add_dependency_script_nodes(edge[1], graph_object=graph_object)
+                self._add_dependency_nodes(edge[1], graph_object=graph_object)
 
     def _create_nodes_from_layouts(self, pack_name: str, layouts: list[Path], graph_object: Graph) -> None:
         """Creates a node for the layout. Also parses the layout file and creates script
@@ -236,6 +246,8 @@ class ContentGraph:
             edges = parser.parse()
             if edges:
                 graph_object.add_edges_from(edges)
+            for edge in edges:
+                self._add_dependency_nodes(edge[1], graph_object=graph_object)
 
     def _create_nodes_from_casetypes(self, pack_name: str, casetypes: list[Path], graph_object: Graph) -> None:
         """Creates a node for each casetype in casetypes. Also parses the casetype json file and
@@ -252,7 +264,6 @@ class ContentGraph:
             }
             nx.set_node_attributes(graph_object, attributes)
             edges = parser.parse()
-            print(edges)
             attributes = {}
             for edge in edges:
                 graph_object.add_edge(edge[0], edge[1])
@@ -261,7 +272,8 @@ class ContentGraph:
                 }
             if edges:
                 nx.set_node_attributes(graph_object, attributes)
-        sys.exit(0)
+            for edge in edges:
+                self._add_dependency_nodes(edge[1], graph_object=graph_object)
 
     def _create_nodes_from_integrations(self, pack_name: str, integrations: list[Path], graph_object: Graph) -> None:
         """Creates a node for each integration in `integrations`. Also parses the integration yaml
