@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
@@ -34,7 +34,10 @@ Homepage = "https://github.com/tlium/xsoar-dependency-graph"
 Issues = "https://github.com/tlium/xsoar-dependency-graph/issues"
 
 [tool.hatch.version]
-path = "src/__about__.py"
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "_version.py"
 
 [tool.pytest.ini_options]
 norecursedirs = ["data"]
