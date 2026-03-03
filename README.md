@@ -11,19 +11,11 @@ It is highly recommended to use a content repository similar to [content-ci-cd-t
 to use [demisto-sdk](https://github.com/demisto/demisto-sdk) to interact with or create content at some point.
 
 ## Usage
+This package is not meant to be consumed directly. Its primay purpose is to support functionality in [xsoar-cli](https://github.com/tlium/xsoar-cli)
 
 ### Installation
-
-#### PyPI
-- `pip install xsoar-dependency-graph`
-
-#### Directly from GitHub
-Bleeding edge versions can be installed using pip:
-- `pip install git+https://github.com/tlium/xsoar-dependency-graph.git`
-
-### Code examples
-Please see [plot_all_packs.py](examples/plot_all_packs.py) or [plot_single_pack.py](examples/plot_single_pack.py) for detailed invocation and code examples.
-These two examples uses mock data in the [tests/data/mock_content_repo](tests/data/mock_content_repo) directory, but it should be easy to use your own content repo instead.
+Install with uv or pip.
+TODO: add better installation docs here.
 
 
 ## How is the content graph constructed
