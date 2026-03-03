@@ -75,11 +75,11 @@ class ContentGraph:
         for pack_name in pack_nodes:
             self.custom_graph.add_node(pack_name, currentVersion="666", node_type="Content Pack")
 
-    def export(self, output_path: Path, fmt: str) -> None:
+    def export(self, output_path: Path, output_format: str) -> None:
         """Exports the full graph (including isolated nodes) to `output_path`. Filenames ending in .gz or .bz2 will be compressed.
         Valid `fmt` options are one of ["GraphML, "JSON"]. Also see networkx.org for documentation on reading and writing graphs."""
         exporter = Exporter(self.custom_graph)
-        exporter.export(output_path=output_path, output_format=fmt)
+        exporter.export(output_path=output_path, output_format=output_format)
 
     def plot_connected_components(self) -> None:
         """Plots the graph as a non-directional graph with interactive node inspection."""
