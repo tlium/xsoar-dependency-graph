@@ -5,6 +5,7 @@ from pathlib import Path
 import networkx as nx
 
 from .dependency_resolver import DependencyResolver
+from .exporter import Exporter
 from .graph_builder import GraphBuilder
 from .visualization import plot_graph
 
@@ -74,27 +75,11 @@ class ContentGraph:
         for pack_name in pack_nodes:
             self.custom_graph.add_node(pack_name, currentVersion="666", node_type="Content Pack")
 
-    def _export_gml(self, output_path: Path) -> None:
-        raise NotImplementedError
-
-    def _export_graphml(self, output_path: Path) -> None:
-        raise NotImplementedError
-
-    def export(self, output_path: Path, fmt: str = "GraphML") -> None:
+    def export(self, output_path: Path, output_format: str) -> str:
         """Exports the full graph (including isolated nodes) to `output_path`. Filenames ending in .gz or .bz2 will be compressed.
         Valid `fmt` options are one of ["GraphML, "JSON"]. Also see networkx.org for documentation on reading and writing graphs."""
-        output_formats = ["GraphML", "GML"]
-        if fmt not in output_formats:
-            msg = f"Output format {fmt} not one of {','.join(output_formats)}"
-            raise ValueError(msg)
-
-        if fmt == "GraphML":
-            self._export_graphml(output_path)
-        elif fmt == "JSON":
-            self._export_gml(output_path)
-        else:
-            msg = f"Invalid output format. Expected one of {','.join(output_formats)}"
-            raise ValueError(msg)
+        exporter = Exporter(self.custom_graph)
+        return exporter.export(output_path=output_path, output_format=output_format)
 
     def plot_connected_components(self) -> None:
         """Plots the graph as a non-directional graph with interactive node inspection."""
