@@ -8,9 +8,8 @@ SUPPORTED_OUTPUT_FORMATS = ["GML", "GraphML"]
 class Exporter:
     def __init__(self, graph: nx.Graph) -> None:
         self.graph = graph
-        print(graph)
 
-    def export(self, output_path: Path, output_format: str) -> None:
+    def export(self, output_path: Path, output_format: str) -> str:
         if output_format not in SUPPORTED_OUTPUT_FORMATS:
             msg = f"Output format {output_format} not one of {','.join(SUPPORTED_OUTPUT_FORMATS)}"
             raise ValueError(msg)
@@ -24,3 +23,4 @@ class Exporter:
         else:
             msg = f"Invalid output format. Expected one of {','.join(SUPPORTED_OUTPUT_FORMATS)}"
             raise ValueError(msg)
+        return str(self.graph)
